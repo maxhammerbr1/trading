@@ -40,9 +40,22 @@ serve(async (req) => {
         {
           parts: [
             {
-              // MODIFIED PROMPT: Requesting response in Portuguese
-              text: `Analise esta imagem de um gráfico de negociação. Identifique o ativo principal, quaisquer padrões de candlestick proeminentes e indicadores técnicos visíveis (por exemplo, médias móveis, RSI, MACD). Com base nesta análise, preveja a direção do mercado (CALL para compra/alta, PUT para venda/baixa). Forneça um nível de confiança para sua previsão (0-100%). Explique seu raciocínio claramente.
-              
+              // MODIFIED PROMPT: Requesting more detailed and trading-specific analysis in Portuguese
+              text: `Analise esta imagem de um gráfico de negociação para fins de trading de curto prazo (1-5 minutos).
+              1. Identifique o ATIVO principal.
+              2. Identifique o TIMEFRAME (se visível).
+              3. Identifique quaisquer PADRÕES DE CANDLESTICK proeminentes (ex: Martelo, Estrela Cadente, Engolfo de Alta/Baixa, Doji, Pin Bar, etc.).
+              4. Observe INDICADORES TÉCNICOS visíveis (ex: Médias Móveis, RSI, MACD, Bandas de Bollinger).
+              5. Avalie a ESTRUTURA DO PREÇO (suporte, resistência, linhas de tendência).
+
+              Com base EXCLUSIVAMENTE nesta análise técnica visual, determine a DIREÇÃO mais provável para uma operação de trading de curto prazo:
+              - "CALL" se houver forte indicação de alta.
+              - "PUT" se houver forte indicação de baixa.
+              - "NEUTRAL" se o mercado estiver indeciso ou sem sinais claros.
+
+              Forneça um nível de CONFIANÇA para esta previsão (0-100%).
+              Explique seu RACIOCÍNIO detalhadamente, mencionando os padrões, indicadores e a estrutura do preço que levaram à sua decisão.
+
               Responda APENAS no seguinte formato JSON, em português:
               {
                 "asset": "Nome do Ativo Detectado (ex: EUR/USD, BTC/USD, Ativo Desconhecido)",
