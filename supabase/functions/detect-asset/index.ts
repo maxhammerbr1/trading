@@ -31,74 +31,60 @@ serve(async (req) => {
       });
     }
 
-    // Prepare image for Vision API (remove data:image/jpeg;base64, prefix)
+    // Prepare image for Generative AI API (remove data:image/jpeg;base64, prefix)
     const base64EncodedImage = imageUrl.split(',')[1];
 
-    // CORRECTED: Changed GOOGLE_CLOUD_VISION_VISION_API_KEY to GOOGLE_CLOUD_VISION_API_KEY
-    const visionApiUrl = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_CLOUD_VISION_API_KEY}`;
-    const visionApiPayload = {
-      requests: [
+    // Using a Generative AI API endpoint (e.g., Gemini) which typically supports API keys for text analysis
+    // Note: The exact model and endpoint might vary, this is a common pattern.
+    const generativeAiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${GOOGLE_CLOUD_VISION_API_KEY}`;
+    
+    const generativeAiPayload = {
+      contents: [
         {
-          image: {
-            content: base64EncodedImage,
-          },
-          features: [
-            { type: 'TEXT_DETECTION' }, // Detect text in the image
-            { type: 'LABEL_DETECTION' } // Detect general labels
+          parts: [
+            {
+              text: "Analyze this image of a trading chart and identify the main asset being traded. Provide only the asset name, if found. If multiple assets are present, list the most prominent one. If no asset is clearly identifiable, state 'Ativo Desconhecido'.",
+            },
+            {
+              inline_data: {
+                mime_type: "image/jpeg", // Assuming JPEG, adjust if other types are expected
+                data: base64EncodedImage,
+              },
+            },
           ],
         },
       ],
     };
 
-    const visionApiResponse = await fetch(visionApiUrl, {
+    const generativeAiApiResponse = await fetch(generativeAiApiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(visionApiPayload),
+      body: JSON.stringify(generativeAiPayload),
     });
 
-    const visionApiData = await visionApiResponse.json();
+    const generativeAiData = await generativeAiApiResponse.json();
 
-    if (!visionApiResponse.ok) {
-      console.error('Google Vision API Error:', visionApiData);
-      return new Response(JSON.stringify({ error: 'Failed to analyze image with Google Vision API.', details: visionApiData }), {
+    if (!generativeAiApiResponse.ok) {
+      console.error('Google Generative AI API Error:', generativeAiData);
+      return new Response(JSON.stringify({ error: 'Failed to analyze image with Google Generative AI API.', details: generativeAiData }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: visionApiResponse.status,
+        status: generativeAiApiResponse.status,
       });
     }
 
-    // Process Vision API response to find a relevant asset
     let detectedAsset = "Ativo Desconhecido";
-    let detectedText = "";
-
-    if (visionApiData.responses && visionApiData.responses.length > 0) {
-      const response = visionApiData.responses[0];
-      if (response.fullTextAnnotation && response.fullTextAnnotation.text) {
-        detectedText = response.fullTextAnnotation.text;
-        // Simple heuristic: look for common asset patterns or just return the first line
-        const lines = detectedText.split('\n');
-        if (lines.length > 0 && lines[0].length < 30) { // Assume first line is often the asset name if short
-          detectedAsset = lines[0].trim();
-        } else {
-          // More robust parsing would be needed here
-          // For demonstration, we'll just use a generic fallback or a simple regex
-          const commonAssets = ["EUR/USD", "BTC/USD", "GOLD", "US 100", "Amazon", "GBP/JPY", "DYDX"];
-          for (const asset of commonAssets) {
-            if (detectedText.includes(asset)) {
-              detectedAsset = asset;
-              break;
-            }
-          }
-        }
-      } else if (response.labelAnnotations && response.labelAnnotations.length > 0) {
-        // Fallback to label detection if no text, though less precise for assets
-        detectedAsset = response.labelAnnotations[0].description;
+    if (generativeAiData.candidates && generativeAiData.candidates.length > 0 && generativeAiData.candidates[0].content && generativeAiData.candidates[0].content.parts && generativeAiData.candidates[0].content.parts.length > 0) {
+      const textResponse = generativeAiData.candidates[0].content.parts[0].text;
+      // Simple parsing: if the AI returns "Ativo Desconhecido", use that. Otherwise, use the response.
+      if (textResponse && textResponse.trim() !== "Ativo Desconhecido") {
+        detectedAsset = textResponse.trim();
       }
     }
 
     return new Response(
-      JSON.stringify({ asset: detectedAsset, fullText: detectedText, message: "Detecção automática via Google Vision API." }),
+      JSON.stringify({ asset: detectedAsset, fullText: detectedAsset, message: "Detecção automática via Google Generative AI API." }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
