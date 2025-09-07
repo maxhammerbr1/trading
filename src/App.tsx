@@ -91,11 +91,65 @@ function App() {
     }
   ];
 
-  const assets = [
-    "EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD", "USD/CAD", 
-    "NZD/USD", "EUR/GBP", "EUR/JPY", "GBP/JPY", "BITCOIN", "ETHEREUM",
-    "GOLD", "SILVER", "OIL", "NASDAQ", "S&P500", "DOW JONES"
+  const assetCategories = [
+    {
+      name: "MERCADO OTC",
+      assets: [
+        "AIG (OTC)", "Alibaba Group Holding (OTC)", "Alphabet/Microsoft (OTC)", "Amazon (OTC)",
+        "Amazon/Alibaba (OTC)", "Amazon/Ebay (OTC)", "Apple (OTC)", "Arbitrum (OTC)",
+        "AUD/CAD (OTC)", "AUD/CHF (OTC)", "AUD/JPY (OTC)", "AUD/NZD (OTC)",
+        "AUD/USD (OTC)", "AUS 200 (OTC)", "Baidu, Inc. ADR (OTC)", "Bitcoin Cash (OTC)",
+        "Bonk (OTC)", "BTC/USD (OTC)", "CAD/CHF (OTC)", "CAD/JPY (OTC)",
+        "CARDANO (OTC)", "Celestia (OTC)", "Chainlink (OTC)", "CHF/JPY (OTC)",
+        "CHFNOK (OTC)", "Citigroup, Inc (OTC)", "Coca-Cola Company (OTC)", "Cosmos (OTC)",
+        "Dash (OTC)", "Decentraland (OTC)", "Dogwifhat (OTC)", "DYDX (OTC)",
+        "EU 50 (OTC)", "ETH/USD (OTC)", "EUR/AUD (OTC)", "EUR/CAD (OTC)",
+        "EUR/CHF (OTC)", "EUR/GBP (OTC)", "EUR/JPY (OTC)", "EUR/NZD (OTC)",
+        "EUR/THB (OTC)", "EUR/USD (OTC)", "Fartcoin (OTC)", "FET (OTC)",
+        "Floki (OTC)", "FR 40 (OTC)", "Gala (OTC)", "Gás Natural (OTC)",
+        "GBP/AUD (OTC)", "GBP/CAD (OTC)", "GBP/CHF (OTC)", "GBP/JPY (OTC)",
+        "GBP/NZD (OTC)", "GBP/USD (OTC)", "GER 30 (OTC)", "GER30/UK100 (OTC)",
+        "Goldman Sachs Group, Inc. (OTC)", "Google (OTC)", "Graph (OTC)", "HBAR (OTC)",
+        "HK 33 (OTC)", "Immutable (OTC)", "Injective (OTC)", "Intel Corporation (OTC)",
+        "Intel/IBM (OTC)", "IOTA (OTC)", "JP 225 (OTC)", "JPMorgan Chase & Co. (OTC)",
+        "JPY/THB (OTC)", "Jupiter (OTC)", "Litecoin (OTC)", "McDonald's Corporation (OTC)",
+        "Meta (OTC)", "Meta/Alphabet (OTC)", "Microsoft Corporation (OTC)", "Microsoft/Apple (OTC)",
+        "Morgan Stanley (OTC)", "NEAR (OTC)", "Netflix/Amazon (OTC)", "Nike, Inc. (OTC)",
+        "NOK/JPY (OTC)", "NZD/CAD (OTC)", "NZD/JPY (OTC)", "NZDCHF (OTC)",
+        "Ondo (OTC)", "Onyxcoin (OTC)", "ORDI (OTC)", "Ouro/Prata (OTC)",
+        "PEN/USD (OTC)", "Pepe (OTC)", "Polkadot (OTC)", "Polygon (OTC)",
+        "Pudgy Penguins (OTC)", "Pyth (OTC)", "Raydium (OTC)", "Render (OTC)",
+        "Ripple (OTC)", "Ronin (OTC)", "Sandbox (OTC)", "Sei (OTC)",
+        "Snap Inc. (OTC)", "SOL/USD (OTC)", "SP 35 (OTC)", "Stacks (OTC)",
+        "Sui (OTC)", "TAO (OTC)", "Tesla (OTC)", "Tesla/Ford (OTC)",
+        "TON (OTC)", "TRON/USD (OTC)", "TRUMP Coin (OTC)", "UK 100 (OTC)",
+        "UKOUSD (OTC)", "US 100 (OTC)", "US 30 (OTC)", "US 500 (OTC)",
+        "US100/JP225 (OTC)", "US2000 (OTC)", "US30/JP225 (OTC)", "US500/JP225 (OTC)",
+        "USD/BRL (OTC)", "USD/CAD (OTC)", "USD/CHF (OTC)", "USD/COP (OTC)",
+        "USD/HKD (OTC)", "USD/MXN (OTC)", "USD/NOK (OTC)", "USD/PLN (OTC)",
+        "USD/SEK (OTC)", "USD/SGD (OTC)", "USD/THB (OTC)", "USD/TRY (OTC)",
+        "USD/ZAR (OTC)", "USOUSD (OTC)", "Vaulta (OTC)", "Worldcoin (OTC)",
+        "XAGUSD (OTC)", "XAUUSD (OTC)"
+      ]
+    },
+    {
+      name: "MERCADO ABERTO",
+      assets: [
+        "AUD/CAD", "AUD/CHF", "AUD/JPY", "AUD/USD", "BTC/USD", "CAD/CHF",
+        "EUR/AUD", "EUR/CAD", "EUR/GBP", "EUR/JPY", "EUR/NZD", "EUR/USD",
+        "GBP/AUD", "GBP/CAD", "GBP/CHF", "GBP/JPY", "GBP/NZD", "GBP/USD",
+        "JPY Currency Index", "NZD/CAD", "NZD/USD", "US 100", "US 30",
+        "US 500", "USD Currency Index", "USD/CAD", "USD/CHF", "USD/JPY"
+      ]
+    }
   ];
+
+  // Flattened list of all assets for getRandomAsset
+  const allAssets = assetCategories.flatMap(category => category.assets);
+
+  const getRandomAsset = () => {
+    return allAssets[Math.floor(Math.random() * allAssets.length)];
+  };
 
   const mockAnalysisResults = [
     {
@@ -154,10 +208,6 @@ function App() {
 
   const selectAI = (aiId: string) => {
     setSelectedAI(aiId);
-  };
-
-  const getRandomAsset = () => {
-    return assets[Math.floor(Math.random() * assets.length)];
   };
 
   const simulateAnalysis = async (isAutomatic: boolean) => {
@@ -319,7 +369,7 @@ function App() {
                 {!uploadedImage ? (
                   <div className="upload-content">
                     <div className="upload-icon">
-                      <Upload /> {/* Changed from CloudUpload to Upload */}
+                      <Upload />
                     </div>
                     <h3>Arraste e solte sua imagem aqui</h3>
                     <p>ou</p>
@@ -363,8 +413,12 @@ function App() {
                 <label className="form-label" htmlFor="assetSelect">Ativo:</label>
                 <select className="form-control" id="assetSelect">
                   <option value="">Detectar automaticamente</option>
-                  {assets.map(asset => (
-                    <option key={asset} value={asset}>{asset}</option>
+                  {assetCategories.map((category, index) => (
+                    <optgroup key={index} label={category.name}>
+                      {category.assets.map(asset => (
+                        <option key={asset} value={asset}>{asset}</option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </div>
