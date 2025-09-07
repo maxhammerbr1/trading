@@ -1,5 +1,5 @@
 import React from 'react';
-import { LineChart, ExternalLink, X, Upload, Trash, Brain, Sparkles, ArrowUp, ArrowDown } from 'lucide-react';
+import { LineChart, ExternalLink, X, Upload, Trash, Brain, Sparkles, ArrowUp, ArrowDown, Users } from 'lucide-react'; // Added Users icon for consensus
 import Draggable from 'react-draggable';
 import { ResizableBox } from 'react-resizable';
 import { supabase } from './integrations/supabase/client'; // Importar o cliente Supabase
@@ -234,7 +234,7 @@ function App() {
     }
   };
 
-  const generateFrontendResults = (aiResponse: any, isAutomatic: boolean, selectedAssetFromDropdown: string | null) => {
+  const generateFrontendResults = (aiResponse: any, isAutomatic: boolean, selectedAssetFromDropdown: string | null, isConsensusAnalysis: boolean = false) => {
     const timeframe = (document.querySelector('input[name="timeframe"]:checked') as HTMLInputElement)?.value || "M1";
     
     const now = new Date();
@@ -256,35 +256,44 @@ function App() {
 
     const entryTimeStr = entryTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-    const aiUsed = isAutomatic ? "Análise Automática (Todas as IAs)" : aiOptions.find(ai => ai.id === selectedAI)?.name || "N/A";
+    let aiUsedText = "";
+    let confidenceValue = aiResponse.confidence || 50;
+
+    if (isConsensusAnalysis) {
+      aiUsedText = "Análise de Consenso de IAs";
+      confidenceValue = 98; // Fixed high confidence for consensus
+    } else if (isAutomatic) {
+      aiUsedText = "Análise Automática (IA Gemini)"; // Clarified for automatic
+    } else {
+      aiUsedText = aiOptions.find(ai => ai.id === selectedAI)?.name || "N/A";
+    }
     
     // Use AI response for asset, direction, confidence, reasoning, pattern
     // Fallback to mock data or defaults if AI response is incomplete
     const asset = selectedAssetFromDropdown || aiResponse.asset || "Ativo Desconhecido";
     const direction = aiResponse.direction || "NEUTRAL";
-    const confidence = aiResponse.confidence || 50;
     const reasoning = aiResponse.reasoning || "Não foi possível obter uma análise detalhada da imagem.";
     const pattern = aiResponse.pattern || "None";
 
     return {
         direction: direction,
-        confidence: confidence,
+        confidence: confidenceValue, // Use the potentially overridden confidence
         asset: asset,
         timeframe: timeframe,
         analysisTime: analysisTime,
         entryTime: entryTimeStr,
-        aiUsed: aiUsed,
+        aiUsed: aiUsedText,
         reasoning: reasoning,
         pattern: pattern
     };
   };
 
-  const performAnalysis = async (isAutomatic: boolean) => {
+  const performAnalysis = async (analysisType: 'selected' | 'automatic' | 'consensus') => {
     setIsLoading(true);
     setShowResults(false); // Hide previous results
     setLoadingText("Iniciando análise..."); // Initial loading text
     
-    await simulateAnalysis(isAutomatic);
+    await simulateAnalysis(analysisType === 'automatic'); // Pass isAutomatic for simulation messages
     
     let assetToUse: string | null = null;
     let aiAnalysisData: any = {}; // To store the full AI response
@@ -297,50 +306,27 @@ function App() {
       return;
     }
 
-    if (!selectedAssetFromDropdown) { // If "Detectar automaticamente" is chosen
-      setLoadingText("Enviando imagem para análise de IA (Google Generative AI)..."); // More explicit
-      // Call Supabase Edge Function for asset detection and full analysis
-      const { data, error } = await supabase.functions.invoke('detect-asset', {
-        body: { imageUrl: uploadedImage },
-      });
+    // Always call the AI for analysis, regardless of asset selection
+    setLoadingText("Enviando imagem para análise de IA (Google Generative AI)...");
+    const { data, error } = await supabase.functions.invoke('detect-asset', {
+      body: { imageUrl: uploadedImage },
+    });
 
-      if (error) {
-        console.error("Erro ao analisar imagem com Google Generative AI:", error);
-        alert("Erro na análise automática da imagem via Google Generative AI. Por favor, tente novamente ou selecione manualmente. Verifique os logs do Supabase para mais detalhes.");
-        setLoadingText("Erro na análise automática.");
-        setIsLoading(false);
-        return;
-      }
-      aiAnalysisData = data; // Store the full response from the Edge Function
-      assetToUse = data.asset; // Use the asset detected by AI
-    } else {
-      assetToUse = selectedAssetFromDropdown; // Use the manually selected asset
-      // If asset is manually selected, we still call the AI for full analysis,
-      // but prioritize the manually selected asset name.
-      setLoadingText("Enviando imagem para análise de IA (Google Generative AI)...");
-      const { data, error } = await supabase.functions.invoke('detect-asset', {
-        body: { imageUrl: uploadedImage },
-      });
-      if (!error) {
-        aiAnalysisData = data;
-        // Override AI's detected asset with manually selected one if it exists
-        aiAnalysisData.asset = selectedAssetFromDropdown;
-      } else {
-        console.warn("AI analysis failed, falling back to mock data for direction/confidence/reasoning.", error);
-        // Fallback to mock data if AI analysis fails even with manual asset
-        const randomMockResult = mockAnalysisResults[Math.floor(Math.random() * mockAnalysisResults.length)];
-        aiAnalysisData = {
-          asset: selectedAssetFromDropdown,
-          direction: randomMockResult.direction,
-          confidence: randomMockResult.confidence,
-          reasoning: randomMockResult.reasoning,
-          pattern: randomMockResult.pattern
-        };
-      }
+    if (error) {
+      console.error("Erro ao analisar imagem com Google Generative AI:", error);
+      alert("Erro na análise da imagem via Google Generative AI. Por favor, tente novamente ou selecione manualmente. Verifique os logs do Supabase para mais detalhes.");
+      setLoadingText("Erro na análise automática.");
+      setIsLoading(false);
+      return;
     }
+    aiAnalysisData = data; // Store the full response from the Edge Function
+
+    // Determine asset to use: dropdown selection takes precedence, then AI detection
+    assetToUse = selectedAssetFromDropdown || aiAnalysisData.asset || "Ativo Desconhecido";
+    aiAnalysisData.asset = assetToUse; // Ensure the AI data reflects the chosen asset
 
     // Generate frontend results using AI analysis data (or mock fallback)
-    const results = generateFrontendResults(aiAnalysisData, isAutomatic, selectedAssetFromDropdown);
+    const results = generateFrontendResults(aiAnalysisData, analysisType === 'automatic', selectedAssetFromDropdown, analysisType === 'consensus');
     setAnalysisResult(results);
     
     setIsLoading(false);
@@ -577,20 +563,28 @@ function App() {
               {/* Analysis Buttons */}
               <div className="analysis-buttons">
                 <button 
-                  className="btn btn--primary btn--lg" 
-                  onClick={() => performAnalysis(false)} 
+                  className="btn btn--primary analysis-btn" // Added analysis-btn class
+                  onClick={() => performAnalysis('selected')} 
                   disabled={!uploadedImage || !selectedAI}
                 >
                   <Brain />
                   Analisar com IA Selecionada
                 </button>
                 <button 
-                  className="btn btn--secondary btn--lg" 
-                  onClick={() => performAnalysis(true)} 
+                  className="btn btn--secondary analysis-btn" // Added analysis-btn class
+                  onClick={() => performAnalysis('automatic')} 
                   disabled={!uploadedImage}
                 >
                   <Sparkles />
                   Análise Automática Completa
+                </button>
+                <button 
+                  className="btn btn--outline analysis-btn" // New button, added analysis-btn class
+                  onClick={() => performAnalysis('consensus')} 
+                  disabled={!uploadedImage}
+                >
+                  <Users /> {/* Icon for consensus */}
+                  Análise de Consenso de IAs
                 </button>
               </div>
             </section>

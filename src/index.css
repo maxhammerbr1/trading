@@ -233,7 +233,7 @@
   --color-surface: var(--color-charcoal-800);
   --color-text: var(--color-gray-200);
   --color-text-secondary: rgba(var(--color-gray-300-rgb), 0.7);
-  --color-primary: var(--color-teal-300);
+    --color-primary: var(--color-teal-300);
   --color-primary-hover: var(--color-teal-400);
   --color-primary-active: var(--color-teal-800);
   --color-secondary: rgba(var(--color-gray-400-rgb), 0.15);
@@ -1161,9 +1161,11 @@ select.form-control {
 }
 
 .analysis-buttons .btn {
-  min-width: 250px;
+  min-width: 250px; /* Ensure minimum width for all buttons */
   position: relative;
   overflow: hidden;
+  flex-grow: 1; /* Allow buttons to grow and fill space */
+  max-width: 300px; /* Max width to prevent them from becoming too wide on large screens */
 }
 
 .analysis-buttons .btn::before {
