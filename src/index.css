@@ -855,9 +855,9 @@ select.form-control {
 }
 
 .mini-browser.resizable-box {
-  /* Styles specific to react-resizable wrapper */
   /* Removed conflicting position/top/right/left/bottom properties */
-  transform: none !important; /* Ensure Draggable's transform is the one that applies */
+  /* Allow Draggable to control position via transform */
+  /* transform: none !important; -- REMOVED THIS LINE */
 }
 
 .mini-browser__content {
@@ -1283,7 +1283,6 @@ select.form-control {
 }
 
 .typing-animation {
-  /* Removed white-space: nowrap; and overflow: hidden; to allow text wrapping */
   white-space: normal; /* Allow text to wrap */
   word-wrap: break-word; /* Ensure long words break */
   animation: typing 3s steps(50, end); /* Keep animation if desired, but it will now wrap */
