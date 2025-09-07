@@ -89,25 +89,30 @@ serve(async (req) => {
     };
 
     if (generativeAiData.candidates && generativeAiData.candidates.length > 0 && generativeAiData.candidates[0].content && generativeAiData.candidates[0].content.parts && generativeAiData.candidates[0].content.parts.length > 0) {
-      const textResponse = generativeAiData.candidates[0].content.parts[0].text;
+      let textResponse = generativeAiData.candidates[0].content.parts[0].text;
       console.log("Raw AI Response:", textResponse); // Log the raw response for debugging
 
+      // NEW: Clean the response: remove markdown code block if present
+      const jsonMatch = textResponse.match(/```json\n([\s\S]*?)\n```/);
+      if (jsonMatch && jsonMatch[1]) {
+        textResponse = jsonMatch[1];
+      } else {
+        // Fallback if no markdown block, try to clean up common AI conversational intros
+        textResponse = textResponse.replace(/^(Here's the analysis in JSON format:|```json|```|\s)+/g, '').trim();
+      }
+
       try {
-        // Attempt to parse the JSON response from the AI
         const parsedResponse = JSON.parse(textResponse);
         analysisResult.asset = parsedResponse.asset || analysisResult.asset;
         analysisResult.direction = parsedResponse.direction || analysisResult.direction;
+        // Ensure confidence is parsed as an integer
         analysisResult.confidence = parseInt(parsedResponse.confidence) || analysisResult.confidence;
         analysisResult.reasoning = parsedResponse.reasoning || analysisResult.reasoning;
         analysisResult.pattern = parsedResponse.pattern || analysisResult.pattern;
       } catch (jsonError) {
         console.error("Failed to parse AI response as JSON:", jsonError);
-        analysisResult.reasoning = `Análise parcial: ${textResponse.substring(0, 200)}... (Erro ao formatar JSON)`;
-        // Fallback to simple text detection for asset if JSON parsing fails
-        const lines = textResponse.split('\n');
-        if (lines.length > 0 && lines[0].length < 30 && lines[0].includes("asset")) {
-          analysisResult.asset = lines[0].replace(/"asset":\s*"/, '').replace(/"/, '').trim();
-        }
+        // If parsing fails, use a more informative error message for debugging
+        analysisResult.reasoning = `Erro ao processar análise da IA. Resposta bruta: ${textResponse.substring(0, 500)}...`;
       }
     }
 
