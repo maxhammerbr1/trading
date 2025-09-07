@@ -842,7 +842,7 @@ select.form-control {
 
 /* Mini Browser */
 .mini-browser {
-  position: fixed;
+  position: fixed; /* Keep fixed for initial positioning, but Draggable will override transform */
   top: 80px;
   right: var(--space-20);
   background: var(--color-surface);
@@ -852,17 +852,12 @@ select.form-control {
   box-shadow: var(--shadow-lg);
   z-index: 50;
   transition: all var(--duration-normal) var(--ease-standard);
-  /* Remove fixed width/height for desktop, ResizableBox will control it */
 }
 
 .mini-browser.resizable-box {
   /* Styles specific to react-resizable wrapper */
-  position: fixed !important; /* Override react-resizable default to keep it fixed */
-  top: 80px;
-  right: var(--space-20);
-  left: unset !important; /* Ensure it stays on the right */
-  bottom: unset !important; /* Ensure it stays at the top */
-  transform: none !important; /* Reset transform from Draggable if not needed */
+  /* Removed conflicting position/top/right/left/bottom properties */
+  transform: none !important; /* Ensure Draggable's transform is the one that applies */
 }
 
 .mini-browser__content {
@@ -1288,9 +1283,10 @@ select.form-control {
 }
 
 .typing-animation {
-  overflow: hidden;
-  white-space: nowrap;
-  animation: typing 3s steps(50, end);
+  /* Removed white-space: nowrap; and overflow: hidden; to allow text wrapping */
+  white-space: normal; /* Allow text to wrap */
+  word-wrap: break-word; /* Ensure long words break */
+  animation: typing 3s steps(50, end); /* Keep animation if desired, but it will now wrap */
 }
 
 @keyframes typing {
@@ -1362,6 +1358,7 @@ select.form-control {
     left: var(--space-8);
     width: auto; /* Let content define width or use flex */
     height: 250px;
+    transform: none; /* Ensure no transform conflicts on mobile */
   }
   
   .header__content {

@@ -40,15 +40,16 @@ serve(async (req) => {
         {
           parts: [
             {
-              text: `Analyze this trading chart image. Identify the main asset, any prominent candlestick patterns, and visible technical indicators (e.g., moving averages, RSI, MACD). Based on this analysis, predict the market direction (CALL for buy/up, PUT for sell/down). Provide a confidence level for your prediction (0-100%). Explain your reasoning clearly.
+              // MODIFIED PROMPT: Requesting response in Portuguese
+              text: `Analise esta imagem de um gráfico de negociação. Identifique o ativo principal, quaisquer padrões de candlestick proeminentes e indicadores técnicos visíveis (por exemplo, médias móveis, RSI, MACD). Com base nesta análise, preveja a direção do mercado (CALL para compra/alta, PUT para venda/baixa). Forneça um nível de confiança para sua previsão (0-100%). Explique seu raciocínio claramente.
               
-              Respond ONLY in the following JSON format:
+              Responda APENAS no seguinte formato JSON, em português:
               {
-                "asset": "Detected Asset Name (e.g., EUR/USD, BTC/USD, Ativo Desconhecido)",
+                "asset": "Nome do Ativo Detectado (ex: EUR/USD, BTC/USD, Ativo Desconhecido)",
                 "direction": "CALL" | "PUT" | "NEUTRAL",
-                "confidence": "Number (0-100)",
-                "reasoning": "Detailed explanation of the analysis, patterns, and indicators leading to the prediction.",
-                "pattern": "Identified Candlestick Pattern (e.g., Hammer, Doji, Engulfing Bullish, None)"
+                "confidence": "Número (0-100)",
+                "reasoning": "Explicação detalhada da análise, padrões e indicadores que levam à previsão, em português.",
+                "pattern": "Padrão de Candlestick Identificado (ex: Martelo, Doji, Engolfo de Alta, Nenhum)"
               }`,
             },
             {
