@@ -1,5 +1,7 @@
 import React from 'react';
 import { LineChart, ExternalLink, X, Upload, Trash, Brain, Sparkles, ArrowUp, ArrowDown } from 'lucide-react';
+import Draggable from 'react-draggable';
+import { ResizableBox } from 'react-resizable';
 
 function App() {
   // State for mini browser visibility
@@ -16,6 +18,11 @@ function App() {
   const [loadingText, setLoadingText] = React.useState("Processando imagem com IA...");
   // State for analysis results
   const [analysisResult, setAnalysisResult] = React.useState<any>(null);
+
+  // State for mini browser dimensions and desktop detection
+  const [miniBrowserWidth, setMiniBrowserWidth] = React.useState(600);
+  const [miniBrowserHeight, setMiniBrowserHeight] = React.useState(450);
+  const [isDesktop, setIsDesktop] = React.useState(true);
 
   // Mock data (moved from app.js)
   const aiOptions = [
@@ -314,6 +321,49 @@ function App() {
     }
   }, [showResults]);
 
+  // Effect to detect desktop/mobile and update mini browser dimensions
+  React.useEffect(() => {
+    const handleResize = () => {
+      const currentIsDesktop = window.innerWidth > 768; // Define desktop breakpoint
+      setIsDesktop(currentIsDesktop);
+      if (!currentIsDesktop) {
+        // Reset dimensions for mobile if needed, or let CSS handle it
+        setMiniBrowserWidth(window.innerWidth - 40); // Example: 20px padding on each side
+        setMiniBrowserHeight(250); // Mobile default height
+      } else {
+        // Set desktop default dimensions if it's desktop
+        setMiniBrowserWidth(600);
+        setMiniBrowserHeight(450);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Call once on mount to set initial state
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  const onResize = (event: any, { size }: any) => {
+    setMiniBrowserWidth(size.width);
+    setMiniBrowserHeight(size.height);
+  };
+
+  const miniBrowserContent = (
+    <div className="mini-browser__content">
+      <div className="mini-browser__header">
+        <div className="browser-controls">
+          <span className="browser-url">https://trade.polariumbroker.com/traderoom</span>
+          <button className="btn btn--sm" onClick={() => setIsMiniBrowserOpen(false)}>
+            <X />
+          </button>
+        </div>
+      </div>
+      <iframe src="https://trade.polariumbroker.com/traderoom" frameBorder="0"></iframe>
+    </div>
+  );
+
   return (
     <>
       {/* Animated Background */}
@@ -344,17 +394,26 @@ function App() {
       </header>
 
       {/* Mini Browser */}
-      <div className={`mini-browser ${isMiniBrowserOpen ? '' : 'hidden'}`}>
-        <div className="mini-browser__header">
-          <div className="browser-controls">
-            <span className="browser-url">https://trade.polariumbroker.com/traderoom</span>
-            <button className="btn btn--sm" onClick={() => setIsMiniBrowserOpen(false)}>
-              <X />
-            </button>
+      {isMiniBrowserOpen && (
+        isDesktop ? (
+          <Draggable handle=".mini-browser__header">
+            <ResizableBox
+              width={miniBrowserWidth}
+              height={miniBrowserHeight}
+              minConstraints={[300, 200]}
+              maxConstraints={[window.innerWidth * 0.9, window.innerHeight * 0.9]}
+              onResize={onResize}
+              className="mini-browser resizable-box"
+            >
+              {miniBrowserContent}
+            </ResizableBox>
+          </Draggable>
+        ) : (
+          <div className="mini-browser">
+            {miniBrowserContent}
           </div>
-        </div>
-        <iframe src="https://trade.polariumbroker.com/traderoom" frameBorder="0"></iframe>
-      </div>
+        )
+      )}
 
       {/* Main Content */}
       <main className="main">
@@ -396,7 +455,7 @@ function App() {
                 ) : (
                   <div className="image-preview">
                     <img id="previewImage" src={uploadedImage} alt="Preview" />
-                    <button className="btn btn--sm btn--outline remove-image-btn"> {/* Added class for styling */}
+                    <button className="btn btn--sm btn--outline remove-image-btn" onClick={removeImage}> {/* Added onClick */}
                       <Trash />
                     </button>
                   </div>
