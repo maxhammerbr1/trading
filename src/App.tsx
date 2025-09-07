@@ -278,7 +278,7 @@ function App() {
   const performAnalysis = async (isAutomatic: boolean) => {
     setIsLoading(true);
     setShowResults(false); // Hide previous results
-    setLoadingText("Processando imagem com IA..."); // Reset loading text
+    setLoadingText("Iniciando análise..."); // Initial loading text
     
     await simulateAnalysis(isAutomatic);
     
@@ -286,7 +286,7 @@ function App() {
     const selectedAsset = (document.getElementById('assetSelect') as HTMLSelectElement)?.value;
 
     if (!selectedAsset) { // If "Detectar automaticamente" is chosen
-      setLoadingText("Detectando ativo da imagem com IA...");
+      setLoadingText("Simulando detecção automática de ativo com IA..."); // More explicit
       // Call Supabase Edge Function for asset detection
       const { data, error } = await supabase.functions.invoke('detect-asset', {
         body: { imageUrl: uploadedImage }, // You might send the image data here
@@ -294,9 +294,9 @@ function App() {
       });
 
       if (error) {
-        console.error("Erro ao detectar ativo:", error);
-        alert("Erro na detecção automática do ativo. Por favor, tente novamente ou selecione manualmente.");
-        setLoadingText("Erro na detecção automática.");
+        console.error("Erro ao simular detecção de ativo:", error); // Updated error message
+        alert("Erro na simulação de detecção automática do ativo. Por favor, tente novamente ou selecione manualmente.");
+        setLoadingText("Erro na simulação de detecção automática.");
         setIsLoading(false);
         return;
       }

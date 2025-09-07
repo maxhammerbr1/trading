@@ -19,7 +19,7 @@ serve(async (req) => {
 
   // For now, we'll simulate detection by picking a random asset.
   const mockAssets = [
-    "EUR/USD (OTC)", "BTC/USD (OTC)", "GOLD", "US 100", "Amazon (OTC)", "GBP/JPY"
+    "EUR/USD (OTC)", "BTC/USD (OTC)", "GOLD", "US 100", "Amazon (OTC)", "GBP/JPY", "DYDX (OTC)"
   ];
   const detectedAsset = mockAssets[Math.floor(Math.random() * mockAssets.length)];
 
