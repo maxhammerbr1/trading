@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChartLine, ExternalLink, X, CloudUpload, Upload, Trash, Brain, Sparkles, ArrowUp, ArrowDown } from 'lucide-react';
+import { LineChart, ExternalLink, X, CloudUpload, Upload, Trash, Brain, Sparkles, ArrowUp, ArrowDown } from 'lucide-react';
 
 function App() {
   // State for mini browser visibility
@@ -9,7 +9,7 @@ function App() {
   // State for selected AI
   const [selectedAI, setSelectedAI] = React.useState<string | null>(null);
   // State for analysis results visibility
-  const [showResults, setShowResults] = React.useState(false);
+  const [showResults, setShowResults] = React.React.useState(false);
   // State for loading overlay visibility
   const [isLoading, setIsLoading] = React.useState(false);
   // State for loading text
@@ -266,7 +266,7 @@ function App() {
         <div className="container">
           <div className="header__content">
             <div className="logo">
-              <ChartLine />
+              <LineChart />
               <span>TradingAI Pro</span>
             </div>
             <nav className="nav">
