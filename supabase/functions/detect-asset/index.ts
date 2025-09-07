@@ -34,7 +34,8 @@ serve(async (req) => {
     // Prepare image for Vision API (remove data:image/jpeg;base64, prefix)
     const base64EncodedImage = imageUrl.split(',')[1];
 
-    const visionApiUrl = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_CLOUD_VISION_VISION_API_KEY}`;
+    // CORRECTED: Changed GOOGLE_CLOUD_VISION_VISION_API_KEY to GOOGLE_CLOUD_VISION_API_KEY
+    const visionApiUrl = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_CLOUD_VISION_API_KEY}`;
     const visionApiPayload = {
       requests: [
         {
