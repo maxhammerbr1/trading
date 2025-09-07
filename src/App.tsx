@@ -229,12 +229,14 @@ function App() {
   const generateMockResults = (isAutomatic: boolean) => {
     const randomResult = mockAnalysisResults[Math.floor(Math.random() * mockAnalysisResults.length)];
     const timeframe = (document.querySelector('input[name="timeframe"]:checked') as HTMLInputElement)?.value || "M1";
-    const selectedAsset = (document.getElementById('assetSelect') as HTMLSelectElement)?.value || getRandomAsset();
+    // Ensure selectedAsset is always taken from the dropdown, as "Detectar automaticamente" is removed
+    const selectedAsset = (document.getElementById('assetSelect') as HTMLSelectElement)?.value; 
+    
     const now = new Date();
     const analysisTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     
-    const entryDelay = Math.floor(Math.random() * 3) + 2;
-    const entryTime = new Date(now.getTime() + entryDelay * 60000);
+    // Entry time is now 5 minutes after analysis time
+    const entryTime = new Date(now.getTime() + 5 * 60000); 
     const entryTimeStr = entryTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     const aiUsed = isAutomatic ? "Análise Automática (Todas as IAs)" : aiOptions.find(ai => ai.id === selectedAI)?.name || "N/A";
@@ -245,7 +247,7 @@ function App() {
     return {
         direction: randomResult.direction,
         confidence: confidence,
-        asset: selectedAsset,
+        asset: selectedAsset || getRandomAsset(), // Fallback to random if nothing is selected (shouldn't happen with removed option)
         timeframe: timeframe,
         analysisTime: analysisTime,
         entryTime: entryTimeStr,
@@ -412,7 +414,7 @@ function App() {
               <div className="form-group">
                 <label className="form-label" htmlFor="assetSelect">Ativo:</label>
                 <select className="form-control" id="assetSelect">
-                  <option value="">Detectar automaticamente</option>
+                  {/* Removed "Detectar automaticamente" option */}
                   {assetCategories.map((category, index) => (
                     <optgroup key={index} label={category.name}>
                       {category.assets.map(asset => (
