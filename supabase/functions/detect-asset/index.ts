@@ -21,7 +21,6 @@ serve(async (req) => {
       });
     }
 
-    // Get Google Cloud Vision API Key from environment variables
     const GOOGLE_CLOUD_VISION_API_KEY = Deno.env.get('GOOGLE_CLOUD_VISION_API_KEY');
 
     if (!GOOGLE_CLOUD_VISION_API_KEY) {
@@ -31,18 +30,26 @@ serve(async (req) => {
       });
     }
 
-    // Prepare image for Generative AI API (remove data:image/jpeg;base64, prefix)
     const base64EncodedImage = imageUrl.split(',')[1];
 
-    // CHANGED: Updated model name to gemini-2.5-flash-image-preview
-    const generativeAiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${GOOGLE_CLOUD_VISION_API_KEY}`;
+    // CHANGED: Model to gemini-2.5-pro and a more detailed prompt for analysis
+    const generativeAiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${GOOGLE_CLOUD_VISION_API_KEY}`;
     
     const generativeAiPayload = {
       contents: [
         {
           parts: [
             {
-              text: "Analyze this image of a trading chart and identify the main asset being traded. Provide only the asset name, if found. If multiple assets are present, list the most prominent one. If no asset is clearly identifiable, state 'Ativo Desconhecido'.",
+              text: `Analyze this trading chart image. Identify the main asset, any prominent candlestick patterns, and visible technical indicators (e.g., moving averages, RSI, MACD). Based on this analysis, predict the market direction (CALL for buy/up, PUT for sell/down). Provide a confidence level for your prediction (0-100%). Explain your reasoning clearly.
+              
+              Respond ONLY in the following JSON format:
+              {
+                "asset": "Detected Asset Name (e.g., EUR/USD, BTC/USD, Ativo Desconhecido)",
+                "direction": "CALL" | "PUT" | "NEUTRAL",
+                "confidence": "Number (0-100)",
+                "reasoning": "Detailed explanation of the analysis, patterns, and indicators leading to the prediction.",
+                "pattern": "Identified Candlestick Pattern (e.g., Hammer, Doji, Engulfing Bullish, None)"
+              }`,
             },
             {
               inline_data: {
@@ -73,17 +80,46 @@ serve(async (req) => {
       });
     }
 
-    let detectedAsset = "Ativo Desconhecido";
+    let analysisResult = {
+      asset: "Ativo Desconhecido",
+      direction: "NEUTRAL",
+      confidence: 50,
+      reasoning: "Não foi possível obter uma análise detalhada da imagem.",
+      pattern: "None"
+    };
+
     if (generativeAiData.candidates && generativeAiData.candidates.length > 0 && generativeAiData.candidates[0].content && generativeAiData.candidates[0].content.parts && generativeAiData.candidates[0].content.parts.length > 0) {
       const textResponse = generativeAiData.candidates[0].content.parts[0].text;
-      // Simple parsing: if the AI returns "Ativo Desconhecido", use that. Otherwise, use the response.
-      if (textResponse && textResponse.trim() !== "Ativo Desconhecido") {
-        detectedAsset = textResponse.trim();
+      console.log("Raw AI Response:", textResponse); // Log the raw response for debugging
+
+      try {
+        // Attempt to parse the JSON response from the AI
+        const parsedResponse = JSON.parse(textResponse);
+        analysisResult.asset = parsedResponse.asset || analysisResult.asset;
+        analysisResult.direction = parsedResponse.direction || analysisResult.direction;
+        analysisResult.confidence = parseInt(parsedResponse.confidence) || analysisResult.confidence;
+        analysisResult.reasoning = parsedResponse.reasoning || analysisResult.reasoning;
+        analysisResult.pattern = parsedResponse.pattern || analysisResult.pattern;
+      } catch (jsonError) {
+        console.error("Failed to parse AI response as JSON:", jsonError);
+        analysisResult.reasoning = `Análise parcial: ${textResponse.substring(0, 200)}... (Erro ao formatar JSON)`;
+        // Fallback to simple text detection for asset if JSON parsing fails
+        const lines = textResponse.split('\n');
+        if (lines.length > 0 && lines[0].length < 30 && lines[0].includes("asset")) {
+          analysisResult.asset = lines[0].replace(/"asset":\s*"/, '').replace(/"/, '').trim();
+        }
       }
     }
 
     return new Response(
-      JSON.stringify({ asset: detectedAsset, fullText: detectedAsset, message: "Detecção automática via Google Generative AI API." }),
+      JSON.stringify({ 
+        asset: analysisResult.asset, 
+        direction: analysisResult.direction,
+        confidence: analysisResult.confidence,
+        reasoning: analysisResult.reasoning,
+        pattern: analysisResult.pattern,
+        message: "Análise detalhada via Google Generative AI API." 
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,

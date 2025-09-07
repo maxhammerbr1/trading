@@ -234,8 +234,7 @@ function App() {
     }
   };
 
-  const generateMockResults = (isAutomatic: boolean, assetToUse: string) => {
-    const randomResult = mockAnalysisResults[Math.floor(Math.random() * mockAnalysisResults.length)];
+  const generateFrontendResults = (aiResponse: any, isAutomatic: boolean, selectedAssetFromDropdown: string | null) => {
     const timeframe = (document.querySelector('input[name="timeframe"]:checked') as HTMLInputElement)?.value || "M1";
     
     const now = new Date();
@@ -259,19 +258,24 @@ function App() {
 
     const aiUsed = isAutomatic ? "Análise Automática (Todas as IAs)" : aiOptions.find(ai => ai.id === selectedAI)?.name || "N/A";
     
-    const baseConfidence = randomResult.confidence;
-    const confidence = Math.min(97, Math.max(85, baseConfidence + Math.floor(Math.random() * 6) - 3));
+    // Use AI response for asset, direction, confidence, reasoning, pattern
+    // Fallback to mock data or defaults if AI response is incomplete
+    const asset = selectedAssetFromDropdown || aiResponse.asset || "Ativo Desconhecido";
+    const direction = aiResponse.direction || "NEUTRAL";
+    const confidence = aiResponse.confidence || 50;
+    const reasoning = aiResponse.reasoning || "Não foi possível obter uma análise detalhada da imagem.";
+    const pattern = aiResponse.pattern || "None";
 
     return {
-        direction: randomResult.direction,
+        direction: direction,
         confidence: confidence,
-        asset: assetToUse, // Use the asset determined by selection or detection
+        asset: asset,
         timeframe: timeframe,
         analysisTime: analysisTime,
         entryTime: entryTimeStr,
         aiUsed: aiUsed,
-        reasoning: randomResult.reasoning,
-        pattern: randomResult.pattern
+        reasoning: reasoning,
+        pattern: pattern
     };
   };
 
@@ -282,30 +286,61 @@ function App() {
     
     await simulateAnalysis(isAutomatic);
     
-    let assetToUse: string;
-    const selectedAsset = (document.getElementById('assetSelect') as HTMLSelectElement)?.value;
+    let assetToUse: string | null = null;
+    let aiAnalysisData: any = {}; // To store the full AI response
 
-    if (!selectedAsset) { // If "Detectar automaticamente" is chosen
-      setLoadingText("Enviando imagem para análise de IA (Google Vision)..."); // More explicit
-      // Call Supabase Edge Function for asset detection
+    const selectedAssetFromDropdown = (document.getElementById('assetSelect') as HTMLSelectElement)?.value;
+
+    if (!uploadedImage) {
+      alert("Por favor, faça upload de uma imagem de gráfico para análise.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!selectedAssetFromDropdown) { // If "Detectar automaticamente" is chosen
+      setLoadingText("Enviando imagem para análise de IA (Google Generative AI)..."); // More explicit
+      // Call Supabase Edge Function for asset detection and full analysis
       const { data, error } = await supabase.functions.invoke('detect-asset', {
-        body: { imageUrl: uploadedImage }, // You might send the image data here
-        // headers: { 'Authorization': `Bearer ${YOUR_AUTH_TOKEN}` } // If your function requires auth
+        body: { imageUrl: uploadedImage },
       });
 
       if (error) {
-        console.error("Erro ao detectar ativo com Google Vision:", error); // Updated error message
-        alert("Erro na detecção automática do ativo via Google Vision. Por favor, tente novamente ou selecione manualmente. Verifique se a chave da API está configurada corretamente no Supabase.");
-        setLoadingText("Erro na detecção automática.");
+        console.error("Erro ao analisar imagem com Google Generative AI:", error);
+        alert("Erro na análise automática da imagem via Google Generative AI. Por favor, tente novamente ou selecione manualmente. Verifique os logs do Supabase para mais detalhes.");
+        setLoadingText("Erro na análise automática.");
         setIsLoading(false);
         return;
       }
-      assetToUse = data.asset; // Assuming the function returns { asset: "..." }
+      aiAnalysisData = data; // Store the full response from the Edge Function
+      assetToUse = data.asset; // Use the asset detected by AI
     } else {
-      assetToUse = selectedAsset;
+      assetToUse = selectedAssetFromDropdown; // Use the manually selected asset
+      // If asset is manually selected, we still call the AI for full analysis,
+      // but prioritize the manually selected asset name.
+      setLoadingText("Enviando imagem para análise de IA (Google Generative AI)...");
+      const { data, error } = await supabase.functions.invoke('detect-asset', {
+        body: { imageUrl: uploadedImage },
+      });
+      if (!error) {
+        aiAnalysisData = data;
+        // Override AI's detected asset with manually selected one if it exists
+        aiAnalysisData.asset = selectedAssetFromDropdown;
+      } else {
+        console.warn("AI analysis failed, falling back to mock data for direction/confidence/reasoning.", error);
+        // Fallback to mock data if AI analysis fails even with manual asset
+        const randomMockResult = mockAnalysisResults[Math.floor(Math.random() * mockAnalysisResults.length)];
+        aiAnalysisData = {
+          asset: selectedAssetFromDropdown,
+          direction: randomMockResult.direction,
+          confidence: randomMockResult.confidence,
+          reasoning: randomMockResult.reasoning,
+          pattern: randomMockResult.pattern
+        };
+      }
     }
 
-    const results = generateMockResults(isAutomatic, assetToUse);
+    // Generate frontend results using AI analysis data (or mock fallback)
+    const results = generateFrontendResults(aiAnalysisData, isAutomatic, selectedAssetFromDropdown);
     setAnalysisResult(results);
     
     setIsLoading(false);
@@ -571,7 +606,7 @@ function App() {
                   <div className="result-card">
                     <div className="result-header">
                       <div className={`result-direction ${analysisResult.direction.toLowerCase()}`}>
-                        {analysisResult.direction === 'CALL' ? <ArrowUp /> : <ArrowDown />}
+                        {analysisResult.direction === 'CALL' ? <ArrowUp /> : analysisResult.direction === 'PUT' ? <ArrowDown /> : null}
                         <span>{analysisResult.direction}</span>
                       </div>
                       <div className="result-confidence">
