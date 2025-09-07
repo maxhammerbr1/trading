@@ -286,7 +286,7 @@ function App() {
     const selectedAsset = (document.getElementById('assetSelect') as HTMLSelectElement)?.value;
 
     if (!selectedAsset) { // If "Detectar automaticamente" is chosen
-      setLoadingText("Simulando detecção automática de ativo com IA..."); // More explicit
+      setLoadingText("Enviando imagem para análise de IA (Google Vision)..."); // More explicit
       // Call Supabase Edge Function for asset detection
       const { data, error } = await supabase.functions.invoke('detect-asset', {
         body: { imageUrl: uploadedImage }, // You might send the image data here
@@ -294,9 +294,9 @@ function App() {
       });
 
       if (error) {
-        console.error("Erro ao simular detecção de ativo:", error); // Updated error message
-        alert("Erro na simulação de detecção automática do ativo. Por favor, tente novamente ou selecione manualmente.");
-        setLoadingText("Erro na simulação de detecção automática.");
+        console.error("Erro ao detectar ativo com Google Vision:", error); // Updated error message
+        alert("Erro na detecção automática do ativo via Google Vision. Por favor, tente novamente ou selecione manualmente. Verifique se a chave da API está configurada corretamente no Supabase.");
+        setLoadingText("Erro na detecção automática.");
         setIsLoading(false);
         return;
       }
