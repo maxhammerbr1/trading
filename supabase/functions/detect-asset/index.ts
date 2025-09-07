@@ -32,7 +32,6 @@ serve(async (req) => {
 
     const base64EncodedImage = imageUrl.split(',')[1];
 
-    // CHANGED: Model to gemini-2.5-pro and a more detailed prompt for analysis
     const generativeAiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${GOOGLE_CLOUD_VISION_API_KEY}`;
     
     const generativeAiPayload = {
@@ -41,20 +40,19 @@ serve(async (req) => {
           parts: [
             {
               // MODIFIED PROMPT: Requesting more detailed and trading-specific analysis in Portuguese
-              text: `Analise esta imagem de um gráfico de negociação para fins de trading de curto prazo (1-5 minutos).
-              1. Identifique o ATIVO principal.
-              2. Identifique o TIMEFRAME (se visível).
-              3. Identifique quaisquer PADRÕES DE CANDLESTICK proeminentes (ex: Martelo, Estrela Cadente, Engolfo de Alta/Baixa, Doji, Pin Bar, etc.).
-              4. Observe INDICADORES TÉCNICOS visíveis (ex: Médias Móveis, RSI, MACD, Bandas de Bollinger).
-              5. Avalie a ESTRUTURA DO PREÇO (suporte, resistência, linhas de tendência).
+              text: `Analise esta imagem de um gráfico de negociação para uma decisão de trading de curto prazo (1-5 minutos).
+              1.  **Identifique o ATIVO principal e o TIMEFRAME (se visível).**
+              2.  **Analise a ESTRUTURA DO PREÇO:** Suporte, resistência, linhas de tendência.
+              3.  **Identifique PADRÕES DE CANDLESTICK proeminentes:** (ex: Martelo, Estrela Cadente, Engolfo de Alta/Baixa, Doji, Pin Bar, etc.).
+              4.  **Observe INDICADORES TÉCNICOS visíveis:** (ex: Médias Móveis, RSI, MACD, Bandas de Bollinger).
 
-              Com base EXCLUSIVAMENTE nesta análise técnica visual, determine a DIREÇÃO mais provável para uma operação de trading de curto prazo:
-              - "CALL" se houver forte indicação de alta.
-              - "PUT" se houver forte indicação de baixa.
-              - "NEUTRAL" se o mercado estiver indeciso ou sem sinais claros.
+              Com base EXCLUSIVAMENTE nesta análise técnica visual, e considerando a alta sensibilidade para decisões de trading, determine a **DIREÇÃO MAIS PROVÁVEL** para uma operação de curto prazo:
+              -   **"CALL"** se houver uma **confluência CLARA e FORTE** de sinais de alta.
+              -   **"PUT"** se houver uma **confluência CLARA e FORTE** de sinais de baixa.
+              -   **"NEUTRAL"** se os sinais forem ambíguos, fracos, ou conflitantes, indicando indecisão do mercado.
 
-              Forneça um nível de CONFIANÇA para esta previsão (0-100%).
-              Explique seu RACIOCÍNIO detalhadamente, mencionando os padrões, indicadores e a estrutura do preço que levaram à sua decisão.
+              Forneça um nível de **CONFIANÇA** para esta previsão (0-100%).
+              Explique seu **RACIOCÍNIO** detalhadamente, mencionando os padrões, indicadores e a estrutura do preço que levaram à sua decisão, com foco na clareza e justificativa técnica.
 
               Responda APENAS no seguinte formato JSON, em português:
               {
