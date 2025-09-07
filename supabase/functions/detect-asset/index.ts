@@ -34,9 +34,8 @@ serve(async (req) => {
     // Prepare image for Generative AI API (remove data:image/jpeg;base64, prefix)
     const base64EncodedImage = imageUrl.split(',')[1];
 
-    // Using a Generative AI API endpoint (e.g., Gemini) which typically supports API keys for text analysis
-    // Note: The exact model and endpoint might vary, this is a common pattern.
-    const generativeAiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${GOOGLE_CLOUD_VISION_API_KEY}`;
+    // CHANGED: v1beta to v1 for the API endpoint
+    const generativeAiApiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=${GOOGLE_CLOUD_VISION_API_KEY}`;
     
     const generativeAiPayload = {
       contents: [
