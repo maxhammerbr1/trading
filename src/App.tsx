@@ -235,8 +235,20 @@ function App() {
     const now = new Date();
     const analysisTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     
-    // Entry time is now 5 minutes after analysis time
-    const entryTime = new Date(now.getTime() + 5 * 60000); 
+    let entryTime = new Date(now); // Start with current time for entry calculation
+
+    if (timeframe === "M1") {
+      entryTime.setMinutes(entryTime.getMinutes() + 1);
+    } else if (timeframe === "M5") {
+      const currentMinutes = entryTime.getMinutes();
+      const remainder = currentMinutes % 5;
+      let minutesToAdd = 5 - remainder;
+      if (remainder === 0) { // If it's already a multiple of 5, go to the *next* one
+        minutesToAdd = 5;
+      }
+      entryTime.setMinutes(currentMinutes + minutesToAdd);
+    }
+
     const entryTimeStr = entryTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
     const aiUsed = isAutomatic ? "Análise Automática (Todas as IAs)" : aiOptions.find(ai => ai.id === selectedAI)?.name || "N/A";
@@ -384,7 +396,7 @@ function App() {
                 ) : (
                   <div className="image-preview">
                     <img id="previewImage" src={uploadedImage} alt="Preview" />
-                    <button className="btn btn--sm btn--outline" onClick={removeImage}>
+                    <button className="btn btn--sm btn--outline remove-image-btn"> {/* Added class for styling */}
                       <Trash />
                     </button>
                   </div>

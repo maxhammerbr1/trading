@@ -1008,10 +1008,10 @@ select.form-control {
   box-shadow: var(--shadow-md);
 }
 
-.image-preview button {
+.image-preview .remove-image-btn { /* Targeting the specific button */
   position: absolute;
   top: var(--space-8);
-  right: var(--space-8);
+  left: var(--space-8); /* Changed from right to left */
   background: rgba(var(--color-red-500-rgb), 0.9);
   color: white;
   border: none;
