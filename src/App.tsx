@@ -2,6 +2,7 @@ import React from 'react';
 import { LineChart, ExternalLink, X, Upload, Trash, Brain, Sparkles, ArrowUp, ArrowDown } from 'lucide-react';
 import Draggable from 'react-draggable';
 import { ResizableBox } from 'react-resizable';
+import { supabase } from './integrations/supabase/client'; // Importar o cliente Supabase
 
 function App() {
   // State for mini browser visibility
@@ -233,11 +234,9 @@ function App() {
     }
   };
 
-  const generateMockResults = (isAutomatic: boolean) => {
+  const generateMockResults = (isAutomatic: boolean, assetToUse: string) => {
     const randomResult = mockAnalysisResults[Math.floor(Math.random() * mockAnalysisResults.length)];
     const timeframe = (document.querySelector('input[name="timeframe"]:checked') as HTMLInputElement)?.value || "M1";
-    // Ensure selectedAsset is always taken from the dropdown, as "Detectar automaticamente" is removed
-    const selectedAsset = (document.getElementById('assetSelect') as HTMLSelectElement)?.value; 
     
     const now = new Date();
     const analysisTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -266,7 +265,7 @@ function App() {
     return {
         direction: randomResult.direction,
         confidence: confidence,
-        asset: selectedAsset || getRandomAsset(), // Fallback to random if nothing is selected (shouldn't happen with removed option)
+        asset: assetToUse, // Use the asset determined by selection or detection
         timeframe: timeframe,
         analysisTime: analysisTime,
         entryTime: entryTimeStr,
@@ -283,7 +282,30 @@ function App() {
     
     await simulateAnalysis(isAutomatic);
     
-    const results = generateMockResults(isAutomatic);
+    let assetToUse: string;
+    const selectedAsset = (document.getElementById('assetSelect') as HTMLSelectElement)?.value;
+
+    if (!selectedAsset) { // If "Detectar automaticamente" is chosen
+      setLoadingText("Detectando ativo da imagem com IA...");
+      // Call Supabase Edge Function for asset detection
+      const { data, error } = await supabase.functions.invoke('detect-asset', {
+        body: { imageUrl: uploadedImage }, // You might send the image data here
+        // headers: { 'Authorization': `Bearer ${YOUR_AUTH_TOKEN}` } // If your function requires auth
+      });
+
+      if (error) {
+        console.error("Erro ao detectar ativo:", error);
+        alert("Erro na detecção automática do ativo. Por favor, tente novamente ou selecione manualmente.");
+        setLoadingText("Erro na detecção automática.");
+        setIsLoading(false);
+        return;
+      }
+      assetToUse = data.asset; // Assuming the function returns { asset: "..." }
+    } else {
+      assetToUse = selectedAsset;
+    }
+
+    const results = generateMockResults(isAutomatic, assetToUse);
     setAnalysisResult(results);
     
     setIsLoading(false);
@@ -455,7 +477,7 @@ function App() {
                 ) : (
                   <div className="image-preview">
                     <img id="previewImage" src={uploadedImage} alt="Preview" />
-                    <button className="btn btn--sm btn--outline remove-image-btn" onClick={removeImage}> {/* Added onClick */}
+                    <button className="btn btn--sm btn--outline remove-image-btn" onClick={removeImage}>
                       <Trash />
                     </button>
                   </div>
@@ -485,7 +507,7 @@ function App() {
               <div className="form-group">
                 <label className="form-label" htmlFor="assetSelect">Ativo:</label>
                 <select className="form-control" id="assetSelect">
-                  {/* Removed "Detectar automaticamente" option */}
+                  <option value="">Detectar automaticamente</option> {/* Re-added option */}
                   {assetCategories.map((category, index) => (
                     <optgroup key={index} label={category.name}>
                       {category.assets.map(asset => (
