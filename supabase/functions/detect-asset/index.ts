@@ -34,8 +34,8 @@ serve(async (req) => {
     // Prepare image for Generative AI API (remove data:image/jpeg;base64, prefix)
     const base64EncodedImage = imageUrl.split(',')[1];
 
-    // CHANGED: Reverting from v1 to v1beta for the API endpoint
-    const generativeAiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${GOOGLE_CLOUD_VISION_API_KEY}`;
+    // CHANGED: Updated model name to gemini-2.5-flash-image-preview
+    const generativeAiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${GOOGLE_CLOUD_VISION_API_KEY}`;
     
     const generativeAiPayload = {
       contents: [
