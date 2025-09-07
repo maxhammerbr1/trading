@@ -1,5 +1,5 @@
 import React from 'react';
-import { LineChart, ExternalLink, X, CloudUpload, Upload, Trash, Brain, Sparkles, ArrowUp, ArrowDown } from 'lucide-react';
+import { LineChart, ExternalLink, X, Upload, Trash, Brain, Sparkles, ArrowUp, ArrowDown } from 'lucide-react';
 
 function App() {
   // State for mini browser visibility
@@ -9,7 +9,7 @@ function App() {
   // State for selected AI
   const [selectedAI, setSelectedAI] = React.useState<string | null>(null);
   // State for analysis results visibility
-  const [showResults, setShowResults] = React.React.useState(false);
+  const [showResults, setShowResults] = React.useState(false);
   // State for loading overlay visibility
   const [isLoading, setIsLoading] = React.useState(false);
   // State for loading text
@@ -319,7 +319,7 @@ function App() {
                 {!uploadedImage ? (
                   <div className="upload-content">
                     <div className="upload-icon">
-                      <CloudUpload />
+                      <Upload /> {/* Changed from CloudUpload to Upload */}
                     </div>
                     <h3>Arraste e solte sua imagem aqui</h3>
                     <p>ou</p>
