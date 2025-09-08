@@ -230,7 +230,7 @@ function App() {
 
     for (let i = 0; i < messages.length; i++) {
       setLoadingText(messages[i]);
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 100)); // Reduced timeout for faster simulation
     }
   };
 
