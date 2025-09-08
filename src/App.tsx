@@ -155,11 +155,11 @@ function App() {
   // Flattened list of all assets for getRandomAsset
   const allAssets = assetCategories.flatMap(category => category.assets);
 
-  const getRandomAsset = () => {
+  const _getRandomAsset = () => {
     return allAssets[Math.floor(Math.random() * allAssets.length)];
   };
 
-  const mockAnalysisResults = [
+  const _mockAnalysisResults = [
     {
         pattern: "Hammer",
         direction: "CALL",
@@ -218,7 +218,7 @@ function App() {
     setSelectedAI(aiId);
   };
 
-  const simulateAnalysis = async (isAutomatic: boolean) => {
+  const simulateAnalysis = async (_isAutomatic: boolean) => {
     const messages = [
       "Processando imagem com IA...",
       "Identificando padrões de candlestick...",
@@ -388,7 +388,7 @@ function App() {
     };
   }, []);
 
-  const onResize = (event: any, { size }: any) => {
+  const onResize = (_event: any, { size }: any) => {
     setMiniBrowserWidth(size.width);
     setMiniBrowserHeight(size.height);
   };
