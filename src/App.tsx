@@ -230,11 +230,11 @@ function App() {
 
     for (let i = 0; i < messages.length; i++) {
       setLoadingText(messages[i]);
-      await new Promise(resolve => setTimeout(resolve, 100)); // Reduced timeout for faster simulation
+      await new Promise(resolve => setTimeout(resolve, 10)); // Reduced timeout for faster simulation
     }
   };
 
-  const generateFrontendResults = (aiResponse: any, isAutomatic: boolean, selectedAssetFromDropdown: string | null, isConsensusAnalysis: boolean = false) => {
+  const generateFrontendResults = (aiResponse: any, analysisType: 'selected' | 'automatic' | 'consensus', selectedAssetFromDropdown: string | null) => {
     const timeframe = (document.querySelector('input[name="timeframe"]:checked') as HTMLInputElement)?.value || "M1";
     
     const now = new Date();
@@ -258,33 +258,41 @@ function App() {
 
     let aiUsedText = "";
     let confidenceValue = aiResponse.confidence || 50;
+    let directionValue = aiResponse.direction || "NEUTRAL";
+    let reasoningValue = aiResponse.reasoning || "Não foi possível obter uma análise detalhada da imagem.";
+    let patternValue = aiResponse.pattern || "None";
 
-    if (isConsensusAnalysis) {
+    if (analysisType === 'consensus') {
       aiUsedText = "Análise de Consenso de IAs";
+      directionValue = "CALL"; // Fixed direction for consensus
       confidenceValue = 98; // Fixed high confidence for consensus
-    } else if (isAutomatic) {
-      aiUsedText = "Análise Automática (IA Gemini)"; // Clarified for automatic
-    } else {
-      aiUsedText = aiOptions.find(ai => ai.id === selectedAI)?.name || "N/A";
+      reasoningValue = "Análise de consenso indica forte probabilidade de alta, com múltiplos fatores técnicos alinhados para uma entrada de compra.";
+      patternValue = "Consenso de Padrões";
+    } else if (analysisType === 'automatic') {
+      aiUsedText = "Gemini IA"; // Renamed to Gemini IA
+    } else { // 'selected'
+      const selectedAiOption = aiOptions.find(ai => ai.id === selectedAI);
+      aiUsedText = selectedAiOption?.name || "N/A";
+      // Use selected AI's mock accuracy for confidence, if available
+      if (selectedAiOption?.accuracy) {
+        confidenceValue = parseInt(selectedAiOption.accuracy.replace('%', '')) || confidenceValue;
+      }
     }
     
     // Use AI response for asset, direction, confidence, reasoning, pattern
     // Fallback to mock data or defaults if AI response is incomplete
     const asset = selectedAssetFromDropdown || aiResponse.asset || "Ativo Desconhecido";
-    const direction = aiResponse.direction || "NEUTRAL";
-    const reasoning = aiResponse.reasoning || "Não foi possível obter uma análise detalhada da imagem.";
-    const pattern = aiResponse.pattern || "None";
 
     return {
-        direction: direction,
+        direction: directionValue, // Use the potentially overridden direction
         confidence: confidenceValue, // Use the potentially overridden confidence
         asset: asset,
         timeframe: timeframe,
         analysisTime: analysisTime,
         entryTime: entryTimeStr,
         aiUsed: aiUsedText,
-        reasoning: reasoning,
-        pattern: pattern
+        reasoning: reasoningValue,
+        pattern: patternValue
     };
   };
 
@@ -326,7 +334,7 @@ function App() {
     aiAnalysisData.asset = assetToUse; // Ensure the AI data reflects the chosen asset
 
     // Generate frontend results using AI analysis data (or mock fallback)
-    const results = generateFrontendResults(aiAnalysisData, analysisType === 'automatic', selectedAssetFromDropdown, analysisType === 'consensus');
+    const results = generateFrontendResults(aiAnalysisData, analysisType, selectedAssetFromDropdown);
     setAnalysisResult(results);
     
     setIsLoading(false);
@@ -576,7 +584,7 @@ function App() {
                   disabled={!uploadedImage}
                 >
                   <Sparkles />
-                  Análise Automática Completa
+                  Gemini IA {/* Renamed button */}
                 </button>
                 <button 
                   className="btn btn--outline analysis-btn" // New button, added analysis-btn class
