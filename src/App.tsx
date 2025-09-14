@@ -218,20 +218,11 @@ function App() {
     setSelectedAI(aiId);
   };
 
-  const simulateAnalysis = async (isAutomatic: boolean) => {
-    const messages = [
-      "Processando imagem com IA...",
-      "Identificando padrões de candlestick...",
-      "Analisando suporte e resistência...",
-      "Calculando indicadores técnicos...",
-      "Detectando sinais de entrada...",
-      "Gerando previsão final..."
-    ];
-
-    for (let i = 0; i < messages.length; i++) {
-      setLoadingText(messages[i]);
-      await new Promise(resolve => setTimeout(resolve, 10)); // Reduced timeout for faster simulation
-    }
+  // Removed setTimeout from simulateAnalysis for faster perceived loading
+  const simulateAnalysis = async () => {
+    setLoadingText("Preparando análise...");
+    // The actual waiting time will be the API call itself.
+    // No artificial delay here.
   };
 
   const generateFrontendResults = (aiResponse: any, analysisType: 'selected' | 'automatic' | 'consensus', selectedAssetFromDropdown: string | null) => {
@@ -270,13 +261,19 @@ function App() {
       patternValue = "Consenso de Padrões";
     } else if (analysisType === 'automatic') {
       aiUsedText = "Gemini IA"; // Renamed to Gemini IA
+      // For Gemini, use its actual response
+      directionValue = aiResponse.direction;
+      confidenceValue = aiResponse.confidence;
+      reasoningValue = aiResponse.reasoning;
+      patternValue = aiResponse.pattern;
     } else { // 'selected'
       const selectedAiOption = aiOptions.find(ai => ai.id === selectedAI);
       aiUsedText = selectedAiOption?.name || "N/A";
-      // Use selected AI's mock accuracy for confidence, if available
-      if (selectedAiOption?.accuracy) {
-        confidenceValue = parseInt(selectedAiOption.accuracy.replace('%', '')) || confidenceValue;
-      }
+      // For selected AI, use the mock data generated in performAnalysis
+      directionValue = aiResponse.direction;
+      confidenceValue = aiResponse.confidence;
+      reasoningValue = aiResponse.reasoning;
+      patternValue = aiResponse.pattern;
     }
     
     // Use AI response for asset, direction, confidence, reasoning, pattern
@@ -301,10 +298,10 @@ function App() {
     setShowResults(false); // Hide previous results
     setLoadingText("Iniciando análise..."); // Initial loading text
     
-    await simulateAnalysis(analysisType === 'automatic'); // Pass isAutomatic for simulation messages
+    await simulateAnalysis(); // Call simulateAnalysis without parameter
     
     let assetToUse: string | null = null;
-    let aiAnalysisData: any = {}; // To store the full AI response
+    let aiAnalysisData: any = {}; // To store the full AI response (from Gemini or mock)
 
     const selectedAssetFromDropdown = (document.getElementById('assetSelect') as HTMLSelectElement)?.value;
 
@@ -314,24 +311,48 @@ function App() {
       return;
     }
 
-    // Always call the AI for analysis, regardless of asset selection
-    setLoadingText("Enviando imagem para análise de IA (Google Generative AI)...");
-    const { data, error } = await supabase.functions.invoke('detect-asset', {
-      body: { imageUrl: uploadedImage },
-    });
+    if (analysisType === 'selected') {
+      // --- Logic for "Analisar com IA Selecionada" (using mock data for selected AI) ---
+      const selectedAiOption = aiOptions.find(ai => ai.id === selectedAI);
+      if (!selectedAiOption) {
+        alert("Por favor, selecione uma IA para análise.");
+        setIsLoading(false);
+        return;
+      }
+      setLoadingText(`Analisando com ${selectedAiOption.name}...`);
+      // Simulate a quick analysis for selected AI (e.g., 1 second delay)
+      await new Promise(resolve => setTimeout(resolve, 1000)); 
 
-    if (error) {
-      console.error("Erro ao analisar imagem com Google Generative AI:", error);
-      alert("Erro na análise da imagem via Google Generative AI. Por favor, tente novamente ou selecione manualmente. Verifique os logs do Supabase para mais detalhes.");
-      setLoadingText("Erro na análise automática.");
-      setIsLoading(false);
-      return;
+      // Generate mock results based on selected AI's properties
+      // For "selected" AI, we'll use a mock direction that is more likely to be CALL
+      const mockDirection = Math.random() > 0.3 ? "CALL" : "PUT"; // 70% chance of CALL
+      aiAnalysisData = {
+        asset: selectedAssetFromDropdown || getRandomAsset(), // Use selected or random
+        direction: mockDirection, 
+        confidence: parseInt(selectedAiOption.accuracy.replace('%', '')) || 90, // Use AI's accuracy
+        reasoning: `Análise simulada pela ${selectedAiOption.name}: Baseado na especialidade em ${selectedAiOption.specialty}, observamos sinais que indicam uma possível ${mockDirection.toLowerCase()}.`,
+        pattern: "Padrão Simulado"
+      };
+      assetToUse = aiAnalysisData.asset;
+
+    } else {
+      // --- Logic for "Gemini IA" and "Análise de Consenso de IAs" (calling Gemini Edge Function) ---
+      setLoadingText("Enviando imagem para análise de IA (Google Generative AI)...");
+      const { data, error } = await supabase.functions.invoke('detect-asset', {
+        body: { imageUrl: uploadedImage },
+      });
+
+      if (error) {
+        console.error("Erro ao analisar imagem com Google Generative AI:", error);
+        alert("Erro na análise da imagem via Google Generative AI. Por favor, tente novamente ou selecione manualmente. Verifique os logs do Supabase para mais detalhes.");
+        setLoadingText("Erro na análise automática.");
+        setIsLoading(false);
+        return;
+      }
+      aiAnalysisData = data; // Store the full response from the Edge Function
+      assetToUse = selectedAssetFromDropdown || aiAnalysisData.asset || "Ativo Desconhecido";
+      aiAnalysisData.asset = assetToUse; // Ensure the AI data reflects the chosen asset
     }
-    aiAnalysisData = data; // Store the full response from the Edge Function
-
-    // Determine asset to use: dropdown selection takes precedence, then AI detection
-    assetToUse = selectedAssetFromDropdown || aiAnalysisData.asset || "Ativo Desconhecido";
-    aiAnalysisData.asset = assetToUse; // Ensure the AI data reflects the chosen asset
 
     // Generate frontend results using AI analysis data (or mock fallback)
     const results = generateFrontendResults(aiAnalysisData, analysisType, selectedAssetFromDropdown);
