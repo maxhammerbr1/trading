@@ -40,16 +40,16 @@ serve(async (req) => {
           parts: [
             {
               // MODIFIED PROMPT: Requesting more detailed and trading-specific analysis in Portuguese
-              text: `Analise esta imagem de um gráfico de negociação para uma decisão de trading de curto prazo (1-5 minutos).
+              text: `Analise esta imagem de um gráfico de negociação para uma decisão de trading de curtíssimo prazo (1-5 minutos).
               1.  **Identifique o ATIVO principal e o TIMEFRAME (se visível).**
               2.  **Analise a ESTRUTURA DO PREÇO:** Suporte, resistência, linhas de tendência.
               3.  **Identifique PADRÕES DE CANDLESTICK proeminentes:** (ex: Martelo, Estrela Cadente, Engolfo de Alta/Baixa, Doji, Pin Bar, etc.).
               4.  **Observe INDICADORES TÉCNICOS visíveis:** (ex: Médias Móveis, RSI, MACD, Bandas de Bollinger).
 
-              Com base EXCLUSIVAMENTE nesta análise técnica visual, e considerando a alta sensibilidade para decisões de trading, determine a **DIREÇÃO MAIS PROVÁVEL** para uma operação de curto prazo:
-              -   **"CALL"** se houver uma **confluência CLARA e FORTE** de sinais de alta.
-              -   **"PUT"** se houver uma **confluência CLARA e FORTE** de sinais de baixa.
-              -   **"NEUTRAL"** se os sinais forem ambíguos, fracos, ou conflitantes, indicando indecisão do mercado.
+              Com base EXCLUSIVAMENTE nesta análise técnica visual, e considerando a alta sensibilidade para decisões de trading, determine a **DIREÇÃO MAIS PROVÁVEL** para uma operação de curtíssimo prazo:
+              -   **"CALL"** se houver uma **confluência CLARA de sinais de alta**, mesmo que moderada.
+              -   **"PUT"** se houver uma **confluência CLARA de sinais de baixa**, mesmo que moderada.
+              -   **"NEUTRAL"** APENAS se não houver absolutamente NENHUM sinal discernível em qualquer direção, ou se os sinais forem completamente conflitantes.
 
               Forneça um nível de **CONFIANÇA** para esta previsão (0-100%).
               Explique seu **RACIOCÍNIO** detalhadamente, mencionando os padrões, indicadores e a estrutura do preço que levaram à sua decisão, com foco na clareza e justificativa técnica.
