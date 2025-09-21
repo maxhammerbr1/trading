@@ -1,5 +1,5 @@
 import React from 'react';
-import { LineChart, ExternalLink, X, Upload, Trash, Brain, Sparkles, ArrowUp, ArrowDown, Users, Camera } from 'lucide-react'; // Added Camera icon
+import { LineChart, ExternalLink, X, Upload, Trash, Brain, Sparkles, ArrowUp, ArrowDown, Users } from 'lucide-react'; // Removed Camera icon
 import Draggable from 'react-draggable';
 import { ResizableBox } from 'react-resizable';
 import { supabase } from './integrations/supabase/client'; // Importar o cliente Supabase
@@ -338,10 +338,10 @@ function App() {
     setShowResults(true);
   };
 
-  // Function to trigger camera input
-  const triggerCamera = () => {
-    document.getElementById('cameraInput')?.click();
-  };
+  // Removed triggerCamera function as the button is being removed
+  // const triggerCamera = () => {
+  //   document.getElementById('cameraInput')?.click();
+  // };
 
   // Effect to handle paste events
   React.useEffect(() => {
@@ -503,13 +503,8 @@ function App() {
                       <Upload />
                       Fazer Upload
                     </button>
-                    {!isDesktop && ( // Show "Tirar Foto" button only on mobile
-                      <button className="btn btn--secondary mt-4" onClick={triggerCamera}>
-                        <Camera />
-                        Tirar Foto
-                      </button>
-                    )}
-                    <p className="upload-hint">Suporte: JPG, PNG, GIF | Desktop: Cole com Ctrl+V</p>
+                    {/* Removed "Tirar Foto" button */}
+                    <p className="upload-hint">Suporte: JPG, PNG, GIF | **Desktop/Mobile: Faça um screenshot do gráfico e cole (Ctrl+V) ou faça upload.**</p>
                   </div>
                 ) : (
                   <div className="image-preview">
@@ -521,7 +516,8 @@ function App() {
                 )}
               </div>
               <input type="file" id="fileInput" accept="image/*" hidden onChange={(e) => e.target.files && handleFileSelect(e.target.files[0])} />
-              <input type="file" id="cameraInput" accept="image/*" capture="camera" hidden onChange={(e) => e.target.files && handleFileSelect(e.target.files[0])} />
+              {/* Removed cameraInput */}
+              {/* <input type="file" id="cameraInput" accept="image/*" capture="camera" hidden onChange={(e) => e.target.files && handleFileSelect(e.target.files[0])} /> */}
             </section>
 
             {/* Analysis Options */}
