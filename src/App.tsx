@@ -1,5 +1,5 @@
 import React from 'react';
-import { LineChart, ExternalLink, X, Upload, Trash, Brain, Sparkles, ArrowUp, ArrowDown, Users } from 'lucide-react'; // Added Users icon for consensus
+import { LineChart, ExternalLink, X, Upload, Trash, Brain, Sparkles, ArrowUp, ArrowDown, Users, Camera } from 'lucide-react'; // Added Camera icon
 import Draggable from 'react-draggable';
 import { ResizableBox } from 'react-resizable';
 import { supabase } from './integrations/supabase/client'; // Importar o cliente Supabase
@@ -338,6 +338,11 @@ function App() {
     setShowResults(true);
   };
 
+  // Function to trigger camera input
+  const triggerCamera = () => {
+    document.getElementById('cameraInput')?.click();
+  };
+
   // Effect to handle paste events
   React.useEffect(() => {
     const handlePaste = (e: ClipboardEvent) => {
@@ -498,6 +503,12 @@ function App() {
                       <Upload />
                       Fazer Upload
                     </button>
+                    {!isDesktop && ( // Show "Tirar Foto" button only on mobile
+                      <button className="btn btn--secondary mt-4" onClick={triggerCamera}>
+                        <Camera />
+                        Tirar Foto
+                      </button>
+                    )}
                     <p className="upload-hint">Suporte: JPG, PNG, GIF | Desktop: Cole com Ctrl+V</p>
                   </div>
                 ) : (
@@ -510,6 +521,7 @@ function App() {
                 )}
               </div>
               <input type="file" id="fileInput" accept="image/*" hidden onChange={(e) => e.target.files && handleFileSelect(e.target.files[0])} />
+              <input type="file" id="cameraInput" accept="image/*" capture="camera" hidden onChange={(e) => e.target.files && handleFileSelect(e.target.files[0])} />
             </section>
 
             {/* Analysis Options */}
@@ -595,7 +607,7 @@ function App() {
             </section>
 
             {/* Results Section */}
-            <section className={`results-section ${showResults ? '' : 'hidden'}`} id="resultsSection">
+            <section className={`results-section ${showResults ? '' : 'hidden'}`} id="resultsSection}>
               <div className="section-header">
                 <h2>Resultado da Análise</h2>
               </div>
