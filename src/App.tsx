@@ -607,7 +607,7 @@ function App() {
             </section>
 
             {/* Results Section */}
-            <section className={"results-section" + (showResults ? "" : " hidden")} id="resultsSection}>
+            <section className={"results-section" + (showResults ? "" : " hidden")} id="resultsSection">
                 <div className="section-header">
                   <h2>Resultado da Análise</h2>
                 </div>
